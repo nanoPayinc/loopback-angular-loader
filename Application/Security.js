@@ -1,3 +1,5 @@
+/* global Environment:false */
+
 'use strict';
 
 angular.module('shared')
