@@ -41,6 +41,32 @@ angular.module('shared')
         }
       );
     },
+    loginByToken: function (userData, callback) {
+      var accessToken = userData.userData;
+
+      LoopBackAuth.setUser(accessToken.id, accessToken.userId, false);
+      LoopBackAuth.rememberMe = true;
+      LoopBackAuth.save();
+
+      User.findById(
+        {
+          'id' : accessToken.userId
+        },
+        function(user) {
+          LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
+          LoopBackAuth.isAdmin = user.isAdmin;
+
+          currentUser = user;
+
+          callback(false, user);
+
+          window.location = Environment.getConfig('loginRedirect');
+        },
+        function (res) {
+          callback(res);
+        }
+      );
+    },
     login: function(userData, callback) {
       User.login(userData,
         function(data) {
