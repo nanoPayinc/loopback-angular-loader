@@ -1,6 +1,9 @@
 'use strict';
 
-angular.module('shared', ['lbServices'])
+angular.module('shared', [
+  'lbServices',
+  'angularFileUpload'
+])
   .config(['$httpProvider', function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
     $httpProvider.defaults.useXDomain = true;
