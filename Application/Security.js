@@ -12,7 +12,7 @@ angular.module('shared')
       return currentUser;
     },
     isAuthenticated: function () {
-      return LoopBackAuth.currentUserId;
+      return LoopBackAuth.currentUserId; /// !!! refactor to use boolean value
     },
     userId: function () {
       return LoopBackAuth.currentUserId;
