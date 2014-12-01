@@ -1,8 +1,7 @@
 'use strict';
 
 angular.module('shared', [
-  'lbServices',
-  'angularFileUpload'
+  'lbServices'
 ])
   .config(['$httpProvider', function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
