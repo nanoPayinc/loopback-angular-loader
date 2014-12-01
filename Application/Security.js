@@ -70,7 +70,11 @@ angular.module('shared')
         }
       );
     },
-    login: function(userData, callback) {
+    login: function(userData, callback, options) {
+      if (! options) {
+        options = {};
+      }
+
       User.login(userData,
         function(data) {
           User.findById(
@@ -84,7 +88,7 @@ angular.module('shared')
 
               callback(false, user);
 
-              window.location = Environment.getConfig('loginRedirect');
+              window.location = options.loginRedirect || Environment.getConfig('loginRedirect');
             },
             function (res) {
               callback(res);
