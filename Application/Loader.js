@@ -6,34 +6,37 @@ angular.module('shared')
   .config(['LoopBackResourceProvider', function(LoopBackResourceProvider) {
     LoopBackResourceProvider.setUrlBase(Environment.getConfig('apiUrl'));
   }])
-  .factory('ApplicationLoader', ['ApplicationSecurity', 'ApplicationSockets', function(ApplicationSecurity, ApplicationSockets) {
-    var currentState;
+  .factory('ApplicationLoader', [
+    'ApplicationSecurity', 'ApplicationSockets',
+    function(ApplicationSecurity, ApplicationSockets) {
+      var currentState;
 
-    return {
-      getConfig: function(id) {
-        return Environment.getConfig(id);
-      },
-      configure: function() {},
-      start: function(state, options) {
-        currentState = state;
+      return {
+        getConfig: function(id) {
+          return Environment.getConfig(id);
+        },
+        configure: function() {},
+        start: function(state, options) {
+          currentState = state;
 
-        var preloadUserPromise = ApplicationSecurity.preloadUser();
+          var preloadUserPromise = ApplicationSecurity.preloadUser();
 
-        if (options && options.sockets) {
-          preloadUserPromise.then(function () {
-            ApplicationSockets.connect();
-          });
+          if (options && options.sockets) {
+            preloadUserPromise.then(function () {
+              ApplicationSockets.connect();
+            });
 
-          return preloadUserPromise;
-        } else {
-          return preloadUserPromise;
+            return preloadUserPromise;
+          } else {
+            return preloadUserPromise;
+          }
+        },
+        updateState: function(state) {
+          currentState = state;
+        },
+        getState: function() {
+          return currentState;
         }
-      },
-      updateState: function(state) {
-        currentState = state;
-      },
-      getState: function() {
-        return currentState;
-      }
-    };
-  }]);
+      };
+    }
+  ]);

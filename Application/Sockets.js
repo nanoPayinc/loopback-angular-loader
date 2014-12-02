@@ -20,10 +20,10 @@ angular.module('shared')
         Sockets.connect({
           'userId': userId
         }, function (data) {
-          connection = io.connect('http://localhost:10843/' + data.connectId);
+          connection = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
 
           return true;
-        }, function (err) {
+        }, function () {
           return;
         });
       },
