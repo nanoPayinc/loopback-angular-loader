@@ -22,12 +22,17 @@ angular.module('shared')
         }, function (data) {
           connection = io.connect('http://localhost:10843/' + data.connectId);
 
-          connection.on('hi', function (data) {
-            alert('cool');
-          })
+          return true;
         }, function (err) {
-
+          return;
         });
+      },
+      on: function(eventName, callback) {
+        if (! connection) {
+          this.connect();
+        }
+
+        connection.on(eventName, callback);
       }
     };
 
