@@ -127,12 +127,6 @@ angular.module('shared')
 
                 currentUser = user;
 
-            var socket = io.connect('http://localhost:10843/' + user.id);
-
-              socket.on('hi', function (data) {
-                console.log('test');
-              })
-
                 resolve(user);
               },
               function (res) {

@@ -20,14 +20,19 @@ angular.module('shared')
         Sockets.connect({
           'userId': userId
         }, function (data) {
-          connection = io.connect('http://localhost:10843/' + data.connectId);
+          connection = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
 
-          connection.on('hi', function (data) {
-            alert('cool');
-          })
-        }, function (err) {
-
+          return true;
+        }, function () {
+          return;
         });
+      },
+      on: function(eventName, callback) {
+        if (! connection) {
+          this.connect();
+        }
+
+        connection.on(eventName, callback);
       }
     };
 
