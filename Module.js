@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('shared', [
-  'lbServices'
+  'lbServices',
+  'toaster'
 ])
   .config(['$httpProvider', function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
