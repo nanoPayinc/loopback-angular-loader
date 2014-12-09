@@ -19,6 +19,9 @@ angular.module('shared')
       userId: function () {
         return LoopBackAuth.currentUserId;
       },
+      accessToken: function() {
+        return LoopBackAuth.accessTokenId;
+      },
       isAdmin: function () {
         return LoopBackAuth.isAdmin || false;
       },
