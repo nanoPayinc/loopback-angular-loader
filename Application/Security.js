@@ -19,11 +19,14 @@ angular.module('shared')
       userId: function () {
         return LoopBackAuth.currentUserId;
       },
+      accessToken: function() {
+        return LoopBackAuth.accessTokenId;
+      },
       isAdmin: function () {
         return LoopBackAuth.isAdmin || false;
       },
-      logout: function(callback) {
-        if (typeof callback === 'undefined') {
+      logout: function(callback, options) {
+        if (typeof callback === 'undefined' || !callback) {
           callback = function(){};
         }
 
@@ -33,14 +36,14 @@ angular.module('shared')
           function() {
             self.clearUser();
 
-            window.location = Environment.getConfig('logoutRedirect');
+            window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
             callback(false, true);
           },
           function(res) {
             self.clearUser();
 
-            window.location = Environment.getConfig('logoutRedirect');
+            window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
             callback(res.data.error);
           }
