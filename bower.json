@@ -1,12 +1,12 @@
 {
   "name": "loopback-angular-loader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/cajoy/loopback-angular-loader",
   "authors": [
     "Oleksii Strutsynskyi <cajoy1981@gmail.com>"
   ],
   "description": "Loopback-Angular helper",
-  "main": ["Module.js", "Application/Loader.js"],
+  "main": ["Module.js", "Application/Loader.js", "Application/Security.js", "Application/Sockets.js", "Service/FileUpload.js", "Service/NotificationManager.js"],
   "dependencies": {
     "angularjs-toaster": "~0.4.9",
     "angular-file-upload": "~1.1.5"
