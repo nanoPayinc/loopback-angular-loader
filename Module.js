@@ -2,7 +2,8 @@
 
 angular.module('shared', [
   'lbServices',
-  'toaster'
+  'toaster',
+  'angularFileUpload'
 ])
   .config(['$httpProvider', function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
