@@ -26,6 +26,10 @@ angular.module('shared')
         return LoopBackAuth.isAdmin || false;
       },
       logout: function(callback, options) {
+        if (! options) {
+          options = {};
+        }
+
         if (typeof callback === 'undefined' || !callback) {
           callback = function(){};
         }
