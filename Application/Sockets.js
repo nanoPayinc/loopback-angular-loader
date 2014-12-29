@@ -8,6 +8,7 @@ angular.module('shared')
   'ApplicationSockets', ['ApplicationSecurity', 'Sockets',
   function(ApplicationSecurity, Sockets) {
     var connection;
+    var connectionDtmf;
 
     var internal = {
       connect: function () {
@@ -20,7 +21,8 @@ angular.module('shared')
         Sockets.connect({
           'userId': userId
         }, function (data) {
-          connection = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
+          connection     = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
+          connectionDtmf = io.connect(Environment.getConfig('socketsUrl') + '/secure-voice');
 
           return true;
         }, function () {
@@ -33,6 +35,13 @@ angular.module('shared')
         }
 
         connection.on(eventName, callback);
+      },
+      onSecureVoice: function(eventName, callback) {
+        if (! connectionDtmf) {
+          this.connectionDtmf();
+        }
+
+        connectionDtmf.on(eventName, callback);
       }
     };
 
