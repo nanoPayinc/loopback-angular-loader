@@ -5,17 +5,18 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSockets', ['ApplicationSecurity', 'Sockets',
-  function(ApplicationSecurity, Sockets) {
+  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope',
+  function(ApplicationSecurity, Sockets, $rootScope) {
     var connection;
     var connectionDtmf;
 
     var internal = {
-      connect: function () {
+      connect: function (callback) {
         var userId = ApplicationSecurity.userId();
 
         if (! userId) {
-          return;
+          console.log('not connected 1');
+          callback(false);
         }
 
         Sockets.connect({
@@ -24,24 +25,37 @@ angular.module('shared')
           connection     = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
           connectionDtmf = io.connect(Environment.getConfig('socketsUrl') + '/secure-voice');
 
-          return true;
+          console.log('connected 1');
+
+          $rootScope.$emit("ApplicationSockets.connected", true);
+          callback(true);
+
         }, function () {
-          return;
+          console.log('not connected 2');
+          callback(false);
         });
       },
       on: function(eventName, callback) {
         if (! connection) {
-          this.connect();
+          $rootScope.$on("ApplicationSockets.connected", function() {
+            console.log('added listener 6');
+            connection.on(eventName, callback);
+          });
+        } else {
+          console.log('added listener 2');
+          connection.on(eventName, callback);
         }
-
-        connection.on(eventName, callback);
       },
       onSecureVoice: function(eventName, callback) {
         if (! connectionDtmf) {
-          this.connectionDtmf();
+          $rootScope.$on("ApplicationSockets.connected", function() {
+            console.log('added listener 5');
+            connectionDtmf.on(eventName, callback);
+          });
+        } else {
+          console.log('added listener 4');
+          connectionDtmf.on(eventName, callback);
         }
-
-        connectionDtmf.on(eventName, callback);
       }
     };
 
