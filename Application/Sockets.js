@@ -56,6 +56,28 @@ angular.module('shared')
           console.log('added listener 4');
           connectionDtmf.on(eventName, callback);
         }
+      },
+      emit: function(eventName, data) {
+        if (! connection) {
+          $rootScope.$on("ApplicationSockets.connected", function() {
+            console.log('emitted event 1');
+            connection.emit(eventName, data);
+          });
+        } else {
+          console.log('emitted event 2');
+          connection.emit(eventName, data);
+        }
+      },
+      emitSecureVoice: function(eventName, data) {
+        if (! connectionDtmf) {
+          $rootScope.$on("ApplicationSockets.connected", function() {
+            console.log('emitted event 3');
+            connectionDtmf.emit(eventName, data);
+          });
+        } else {
+          console.log('emitted event 4');
+          connectionDtmf.emit(eventName, data);
+        }
       }
     };
 
