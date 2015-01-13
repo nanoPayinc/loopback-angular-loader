@@ -24,7 +24,7 @@ angular.module('shared')
           if (options && options.sockets) {
             preloadUserPromise.then(function () {
               ApplicationSockets.connect(function (isConnected) {
-                console.log('connected to sockets: ' + isConnected);
+                console.log('Connected to sockets on application load: ' + isConnected);
               });
             });
 

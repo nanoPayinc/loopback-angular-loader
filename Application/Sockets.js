@@ -5,81 +5,126 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope',
-  function(ApplicationSecurity, Sockets, $rootScope) {
+  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope', '$log', '$interval',
+  function(ApplicationSecurity, Sockets, $rootScope, $log, $interval) {
     var connection;
-    var connectionDtmf;
+    var selectedRoom;
+    var updatedDate, currentDate = new Date();
 
-    var internal = {
-      connect: function (callback) {
-        var userId = ApplicationSecurity.userId();
+    var internal = function () {
+      this.room       = false;
+      this.connection = false;
+    }
 
-        if (! userId) {
-          console.log('not connected 1');
-          callback(false);
-        }
+    internal.prototype.connect = function (callback, reconnect) {
+      var self = this;
+      var userId = ApplicationSecurity.userId();
 
-        Sockets.connect({
-          'userId': userId
-        }, function (data) {
-          connection     = io.connect(Environment.getConfig('socketsUrl') + '/' + data.connectId);
-          connectionDtmf = io.connect(Environment.getConfig('socketsUrl') + '/secure-voice');
-
-          console.log('connected 1');
-
-          $rootScope.$emit("ApplicationSockets.connected", true);
-          callback(true);
-
-        }, function () {
-          console.log('not connected 2');
-          callback(false);
-        });
-      },
-      on: function(eventName, callback) {
-        if (! connection) {
-          $rootScope.$on("ApplicationSockets.connected", function() {
-            console.log('added listener 6');
-            connection.on(eventName, callback);
-          });
-        } else {
-          console.log('added listener 2');
-          connection.on(eventName, callback);
-        }
-      },
-      onSecureVoice: function(eventName, callback) {
-        if (! connectionDtmf) {
-          $rootScope.$on("ApplicationSockets.connected", function() {
-            console.log('added listener 5');
-            connectionDtmf.on(eventName, callback);
-          });
-        } else {
-          console.log('added listener 4');
-          connectionDtmf.on(eventName, callback);
-        }
-      },
-      emit: function(eventName, data) {
-        if (! connection) {
-          $rootScope.$on("ApplicationSockets.connected", function() {
-            console.log('emitted event 1');
-            connection.emit(eventName, data);
-          });
-        } else {
-          console.log('emitted event 2');
-          connection.emit(eventName, data);
-        }
-      },
-      emitSecureVoice: function(eventName, data) {
-        if (! connectionDtmf) {
-          $rootScope.$on("ApplicationSockets.connected", function() {
-            console.log('emitted event 3');
-            connectionDtmf.emit(eventName, data);
-          });
-        } else {
-          console.log('emitted event 4');
-          connectionDtmf.emit(eventName, data);
-        }
+      if (! userId) {
+        callback(false);
       }
-    };
 
-    return internal;
+      Sockets.connect({
+        'userId': userId
+      }, function (data) {
+        if(self.connection) {
+          self.connection.disconnect();
+          self.connection.connect();
+        } else {
+          self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId, {'reconnection': false});
+        }
+
+        console.log('Connected to sockets: ', userId);
+
+        if (! reconnect) {
+          $rootScope.$emit("ApplicationSockets.connected", true);
+        }
+
+        callback(true);
+      }, function () {
+        callback(false);
+      });
+    }
+
+    internal.prototype.directOn = function (eventName, callback) {
+      if (this.room) {
+        this.connection.on(eventName, callback);
+      }
+
+      this.connection.on(eventName, callback);
+    }
+
+    internal.prototype.on = function (eventName, callback) {
+      var self = this;
+
+      if (! this.connection) {
+        $rootScope.$on("ApplicationSockets.connected", function() {
+          self.directOn(eventName, callback);
+        });
+      } else {
+        self.directOn(eventName, callback);
+      }
+
+      this.room = false;
+
+      return this;
+    }
+
+    internal.prototype.in = function (room) {
+      this.room = room;
+
+      return this;
+    }
+
+    internal.prototype.directEmit = function (eventName, data) {
+      if (this.room) {
+        this.connection.emit(eventName, data);
+      }
+
+      this.connection.emit(eventName, data);
+    }
+
+    internal.prototype.emit = function (eventName, data) {
+      var self = this;
+
+      if (! this.connection) {
+        $rootScope.$on("ApplicationSockets.connected", function() {
+          self.directEmit(eventName, data);
+        });
+      } else {
+        self.directEmit(eventName, data);
+      }
+
+      this.room = false;
+
+      return this;
+    }
+
+    $log.info('Initialized');
+
+    var engine = new internal;
+
+    $rootScope.$on('ApplicationSockets.connected', function () {
+        engine.connection.on('sockets.connected', function (data) {
+          console.log('received server update');
+          updatedDate = new Date();
+        });
+    });
+
+    $interval(function () {
+      currentDate = new Date();
+
+      if (! updatedDate) {
+        updatedDate = new Date();
+      }
+
+      if (currentDate - updatedDate > 4000) {
+        console.log('reconnecting');
+        engine.connect(function () {
+          console.log('reconnected');
+        }, true);
+      }
+    }, 2000);
+
+    return engine;
 }]);
