@@ -119,7 +119,6 @@ angular.module('shared')
 
       if (currentDate - updatedDate > 4000) {
         isConnected = false;
-        console.log('Disconnected from sockets');
 
         if (ApplicationSecurity.userId()) {
           console.log('Reconnecting to sockets');
