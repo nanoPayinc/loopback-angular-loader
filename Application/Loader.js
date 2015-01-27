@@ -17,6 +17,12 @@ angular.module('shared')
         },
         configure: function() {},
         start: function(state, options) {
+          if (! options) {
+            options = {};
+          }
+
+          options.sockets = true;
+
           currentState = state;
 
           var preloadUserPromise = ApplicationSecurity.preloadUser();

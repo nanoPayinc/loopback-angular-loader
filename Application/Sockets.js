@@ -5,10 +5,11 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope', '$log', '$interval',
-  function(ApplicationSecurity, Sockets, $rootScope, $log, $interval) {
+  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope', '$interval',
+  function(ApplicationSecurity, Sockets, $rootScope, $interval) {
     var connection;
     var selectedRoom;
+    var isConnected = false;
     var updatedDate, currentDate = new Date();
 
     var internal = function () {
@@ -27,7 +28,7 @@ angular.module('shared')
       Sockets.connect({
         'userId': userId
       }, function (data) {
-        if(self.connection) {
+        if (self.connection) {
           self.connection.disconnect();
           self.connection.connect();
         } else {
@@ -100,15 +101,13 @@ angular.module('shared')
       return this;
     }
 
-    $log.info('Initialized');
-
     var engine = new internal;
 
     $rootScope.$on('ApplicationSockets.connected', function () {
-        engine.connection.on('sockets.connected', function (data) {
-          console.log('received server update');
-          updatedDate = new Date();
-        });
+      engine.connection.on('sockets.connected', function (data) {
+        isConnected = true;
+        updatedDate = new Date();
+      });
     });
 
     $interval(function () {
@@ -119,10 +118,14 @@ angular.module('shared')
       }
 
       if (currentDate - updatedDate > 4000) {
-        console.log('reconnecting');
-        engine.connect(function () {
-          console.log('reconnected');
-        }, true);
+        isConnected = false;
+        console.log('Disconnected from sockets');
+
+        if (ApplicationSecurity.userId()) {
+          console.log('Reconnecting to sockets');
+
+          engine.connect(function (data) {}, true);
+        }
       }
     }, 2000);
 
