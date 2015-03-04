@@ -34,7 +34,7 @@ angular.module('shared')
         } else {
           self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId, {'reconnection': false});
         }
-
+console.log('test');
         console.log('Connected to sockets: ', userId);
 
         if (! reconnect) {
@@ -45,6 +45,10 @@ angular.module('shared')
       }, function () {
         callback(false);
       });
+    }
+
+    internal.prototype.directOn = function (eventName, callback) {
+      this.connection.on(eventName, callback);
     }
 
     internal.prototype.on = function (eventName, callback) {
@@ -58,7 +62,7 @@ angular.module('shared')
 
       if (! this.connection) {
         $rootScope.$on("ApplicationSockets.connected", function() {
-          this.connection.on(eventName, callback);
+          self.directOn(eventName, callback);
         });
       } else {
         this.connection.on(eventName, callback);
