@@ -9,12 +9,12 @@ angular.module('shared')
   function(ApplicationSecurity, Sockets, $rootScope, $interval) {
     var connection;
     var selectedRoom;
-    var isConnected = false;
+    var isConnected              = false;
     var updatedDate, currentDate = new Date();
 
     var internal = function () {
-      this.room       = false;
-      this.connection = false;
+      this.connection     = false;
+      this.addedListeners = {};
     }
 
     internal.prototype.connect = function (callback, reconnect) {
@@ -47,42 +47,24 @@ angular.module('shared')
       });
     }
 
-    internal.prototype.directOn = function (eventName, callback) {
-      if (this.room) {
-        this.connection.on(eventName, callback);
-      }
-
-      this.connection.on(eventName, callback);
-    }
-
     internal.prototype.on = function (eventName, callback) {
       var self = this;
 
+      if (this.addedListeners[eventName]) {
+        return this;
+      } else {
+        this.addedListeners[eventName] = true;
+      }
+
       if (! this.connection) {
         $rootScope.$on("ApplicationSockets.connected", function() {
-          self.directOn(eventName, callback);
+          this.connection.on(eventName, callback);
         });
       } else {
-        self.directOn(eventName, callback);
+        this.connection.on(eventName, callback);
       }
 
-      this.room = false;
-
       return this;
-    }
-
-    internal.prototype.in = function (room) {
-      this.room = room;
-
-      return this;
-    }
-
-    internal.prototype.directEmit = function (eventName, data) {
-      if (this.room) {
-        this.connection.emit(eventName, data);
-      }
-
-      this.connection.emit(eventName, data);
     }
 
     internal.prototype.emit = function (eventName, data) {
@@ -90,13 +72,11 @@ angular.module('shared')
 
       if (! this.connection) {
         $rootScope.$on("ApplicationSockets.connected", function() {
-          self.directEmit(eventName, data);
+          this.connection.emit(eventName, data);
         });
       } else {
-        self.directEmit(eventName, data);
+        this.connection.emit(eventName, data);
       }
-
-      this.room = false;
 
       return this;
     }
