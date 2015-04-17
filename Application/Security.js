@@ -35,6 +35,10 @@ angular.module('shared')
         User.logout(false,
           function() {
             self.clearUser();
+            
+            if (typeof options.logoutRedirect !== "undefined" && options.loginRedirect === false) {
+              return;
+            }
 
             window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
@@ -42,6 +46,10 @@ angular.module('shared')
           },
           function(res) {
             self.clearUser();
+            
+            if (typeof options.logoutRedirect !== "undefined" && options.loginRedirect === false) {
+              return;
+            }
 
             window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
@@ -92,6 +100,10 @@ angular.module('shared')
                 currentUser = user;
 
                 callback(false, user);
+                
+                if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
+                  return;
+                }
 
                 window.location = options.loginRedirect || Environment.getConfig('loginRedirect');
               },
