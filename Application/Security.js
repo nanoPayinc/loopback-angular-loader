@@ -5,8 +5,8 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'User', '$q', '$window',
-  function($rootScope, LoopBackAuth, User, $q, $window) {
+  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'User', '$q', '$window', '$cookies',
+  function($rootScope, LoopBackAuth, User, $q, $window, $cookies) {
     var currentUser = {};
 
     var internal = {
@@ -26,6 +26,10 @@ angular.module('shared')
         return LoopBackAuth.isAdmin || false;
       },
       logout: function(callback, options) {
+        if (! options) {
+          options = {};
+        }
+
         if (typeof callback === 'undefined' || !callback) {
           callback = function(){};
         }
@@ -96,6 +100,12 @@ angular.module('shared')
               },
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
+                
+                var expiration = new Date(Date.now() + data.ttl);
+                $cookies.putObject('npAccessToken', {
+                  id:data.id,
+                  expiration:expiration
+                });
 
                 currentUser = user;
 
@@ -132,7 +142,12 @@ angular.module('shared')
         var self = this;
 
         return $q(function(resolve, reject) {
-          if (self.isAuthenticated()) {
+          if (new Date($cookies.getObject('npAccessToken').expiration) < Date.now() && 
+            $window.location.pathname !== Environment.getConfig('logoutRedirect')) {
+            // expired cookie, redirect to logout page
+              $window.location = Environment.getConfig('logoutRedirect') + '#/loginRequired';
+          }
+          else if (self.isAuthenticated()) {
             User.findById(
               {
                 'id': self.isAuthenticated()
