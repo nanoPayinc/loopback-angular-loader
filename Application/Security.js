@@ -146,7 +146,7 @@ angular.module('shared')
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
             $window.location.pathname !== Environment.getConfig('logoutRedirect')) {
             // expired cookie, redirect to logout page
-              $window.location = Environment.getConfig('logoutRedirect') + '#/loginRequired';
+              $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
           else if (self.isAuthenticated()) {
             User.findById(
