@@ -102,7 +102,7 @@ angular.module('shared')
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
                 var expiration = new Date(Date.now() + data.ttl);
-                $cookies.putObject('npAccessToken', {
+                $cookies.putObject(Environment.getConfig('cookieName'), {
                   id:data.id,
                   expiration:expiration
                 });
@@ -142,7 +142,8 @@ angular.module('shared')
         var self = this;
 
         return $q(function(resolve, reject) {
-          if (new Date($cookies.getObject('npAccessToken').expiration) < Date.now() && 
+          if ($cookies.getObject(Environment.getConfig('cookieName')) && 
+            new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
             $window.location.pathname !== Environment.getConfig('logoutRedirect')) {
             // expired cookie, redirect to logout page
               $window.location = Environment.getConfig('logoutRedirect') + '#/loginRequired';
