@@ -140,11 +140,18 @@ angular.module('shared')
       },
       preloadUser: function() {
         var self = this;
+        // create array of URLs where no cookie/authentication is required to access
+        var noAuth = Environment.getConfig('noAuth');
+        noAuth.push(Environment.getConfig('logoutRedirect'));
 
         return $q(function(resolve, reject) {
-          if ($cookies.getObject(Environment.getConfig('cookieName')) && 
+          if (!$cookies.getObject(Environment.getConfig('cookieName')) && noAuth.indexOf($window.location.pathname)) {
+            // missing cookie
+            $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
+          }
+          else if ($cookies.getObject(Environment.getConfig('cookieName')) && 
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
-            $window.location.pathname !== Environment.getConfig('logoutRedirect')) {
+            noAuth.indexOf($window.location.pathname)) {
             // expired cookie, redirect to logout page
               $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
