@@ -120,7 +120,9 @@ angular.module('shared')
                 
                 if (Environment.getConfig('loginRedirect') && 
                 typeof Environment.getConfig('loginRedirect') === "function" ) {
-                  options.loginRedirect = Environment.getConfig('loginRedirect')(user);
+                  options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
+                  // delete loginref so that it is only used once
+                  $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
                 }
 
                 currentUser = user;
@@ -163,13 +165,15 @@ angular.module('shared')
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) && 
             noAuth.indexOf($window.location.pathname) < 0) {
-            // missing cookie
+            // missing cookie, on unauthorized page
+            $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
             $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) && 
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
             noAuth.indexOf($window.location.pathname) < 0) {
             // expired cookie, redirect to logout page
+              $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
               $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
           else if (self.isAuthenticated()) {
