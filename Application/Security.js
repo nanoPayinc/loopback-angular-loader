@@ -73,6 +73,7 @@ angular.module('shared')
             'id' : accessToken.userId
           },
           function(user) {
+            // attach additional user properties to LoopBackAuth user
             LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
             LoopBackAuth.isAdmin = user.isAdmin;
 
@@ -106,6 +107,11 @@ angular.module('shared')
                   id:data.id,
                   expiration:expiration
                 });
+                
+                if (Environment.getConfig('loginRedirect') && 
+                typeof Environment.getConfig('loginRedirect') === "function" ) {
+                  options.loginRedirect = Environment.getConfig('loginRedirect')(user);
+                }
 
                 currentUser = user;
 
