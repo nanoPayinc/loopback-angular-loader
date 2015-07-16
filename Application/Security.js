@@ -101,7 +101,7 @@ angular.module('shared')
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
-                var expiration = new Date(Date.now() + data.ttl);
+                var expiration = Date.now() + (data.ttl * 1000);
                 $cookies.putObject(Environment.getConfig('cookieName'), {
                   id:data.id,
                   expiration:expiration
