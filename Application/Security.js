@@ -43,6 +43,13 @@ angular.module('shared')
             if (typeof options.logoutRedirect !== "undefined" && options.loginRedirect === false) {
               return;
             }
+            
+            if (Environment.getConfig('cookieName')) {
+              $cookies.remove(Environment.getConfig('cookieName'));
+              // set cookie so that application can use to suppress error messages
+              // about being logged out due to expiration of session
+              $cookies.putObject(Environment.getConfig('cookieName') + '_triggerlogout', true);
+            }
 
             window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
@@ -102,11 +109,14 @@ angular.module('shared')
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
-                var expiration = Date.now() + (data.ttl * 1000);
-                $cookies.putObject(Environment.getConfig('cookieName'), {
-                  id:data.id,
-                  expiration:expiration
-                });
+                if (Environment.getConfig('cookieName')) {
+                  // set cookie used to keep Loopback access token TTL with frontend in sync
+                  var expiration = Date.now() + (data.ttl * 1000);
+                  $cookies.putObject(Environment.getConfig('cookieName'), {
+                    id:data.id,
+                    expiration:expiration
+                  }); 
+                }
                 
                 if (Environment.getConfig('loginRedirect') && 
                 typeof Environment.getConfig('loginRedirect') === "function" ) {
@@ -151,13 +161,14 @@ angular.module('shared')
         noAuth.push(Environment.getConfig('logoutRedirect'));
 
         return $q(function(resolve, reject) {
-          if (!$cookies.getObject(Environment.getConfig('cookieName')) && noAuth.indexOf($window.location.pathname)) {
+          if (!$cookies.getObject(Environment.getConfig('cookieName')) && 
+            noAuth.indexOf($window.location.pathname) < 0) {
             // missing cookie
             $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) && 
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
-            noAuth.indexOf($window.location.pathname)) {
+            noAuth.indexOf($window.location.pathname) < 0) {
             // expired cookie, redirect to logout page
               $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
