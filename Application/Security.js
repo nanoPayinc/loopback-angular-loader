@@ -112,10 +112,18 @@ angular.module('shared')
                 if (Environment.getConfig('cookieName')) {
                   // set cookie used to keep Loopback access token TTL with frontend in sync
                   var expiration = Date.now() + (data.ttl * 1000);
+                  var expirationObj = null;
+                  if (userData.rememberme) {
+                    // allow cookie to be retained across browser sessions if "remember me" is checked
+                    expirationObj = { 
+                      expires:new Date(expiration) 
+                    }; 
+                  }
+                  
                   $cookies.putObject(Environment.getConfig('cookieName'), {
                     id:data.id,
                     expiration:expiration
-                  }); 
+                  }, expirationObj); 
                 }
                 
                 if (Environment.getConfig('loginRedirect') && 
@@ -172,7 +180,7 @@ angular.module('shared')
           else if ($cookies.getObject(Environment.getConfig('cookieName')) && 
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
             noAuth.indexOf($window.location.pathname) < 0) {
-            // expired cookie, redirect to logout page
+            // expired cookie within current browsing session, redirect to logout page
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
               $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
