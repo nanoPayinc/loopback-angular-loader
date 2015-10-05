@@ -12,13 +12,8 @@ angular.module('shared')
 
         var uploader = $scope.uploader = new FileUploader({
           scope: $scope,
-          url : Environment.getConfig('apiUrl') + '/containers/' + options.containerId + '/upload',
-          formData : [{
-            componentId: options.componentId,
-            componentClass: options.componentClass,
-            targetId: ''
-          }]
-        });
+          url : options.uploadURL
+        }); 
 
         // FILTERS
         uploader.filters.push({
@@ -26,6 +21,11 @@ angular.module('shared')
           fn: function(item /*{File|FileLikeObject}*/) {
             var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
             return '|jpg|png|jpeg|bmp|gif|'.indexOf(type) !== -1;
+          },
+          name: 'CSVFilter',
+          fn: function(item /*{File|FileLikeObject}*/) {
+            var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
+            return '|csv|'.indexOf(type) !== -1;
           }
         });
 
@@ -33,49 +33,142 @@ angular.module('shared')
 
         // CALLBACKS
         uploader.onWhenAddingFileFailed = function(item /*{File|FileLikeObject}*/, filter, options) {
-          console.info('onWhenAddingFileFailed', item, filter, options);
-        };
+          console.log(options);
+          if (options.onWhenAddingFileFailed) {
+            options.onWhenAddingFileFailed({
+              "item":item,
+              "filter":filter,
+              "options":options
+            });
+          }
+          else {
+            console.info('onWhenAddingFileFailed', item, filter, options); 
+          }
+        }; 
         uploader.onAfterAddingFile = function(fileItem) {
-          console.info('onAfterAddingFile', fileItem);
-        };
+          if (options.onAfterAddingFile) {
+            options.onAfterAddingFile({
+              "fileItem":fileItem
+            });
+          }
+          else {
+            console.info('onAfterAddingFile', fileItem); 
+          }
+        }; 
         uploader.onAfterAddingAll = function(addedFileItems) {
-          console.info('onAfterAddingAll', addedFileItems);
-        };
-        uploader.onBeforeUploadItem = function(item) {
-          console.info('onBeforeUploadItem', item);
-        };
-        uploader.onProgressItem = function(fileItem, progress) {
-          console.info('onProgressItem', fileItem, progress);
-        };
-        uploader.onProgressAll = function(progress) {
-          console.info('onProgressAll', progress);
-        };
-        uploader.onSuccessItem = function(fileItem, response, status, headers) {
-          console.info('onSuccessItem', fileItem, response, status, headers);
-        };
-        uploader.onErrorItem = function(fileItem, response, status, headers) {
-          console.info('onErrorItem', fileItem, response, status, headers);
-        };
-        uploader.onCancelItem = function(fileItem, response, status, headers) {
-          console.info('onCancelItem', fileItem, response, status, headers);
-        };
-        uploader.onCompleteItem = function(fileItem, response, status, headers) {
-          console.info('onCompleteItem', fileItem, response, status, headers);
-        };
-        uploader.onCompleteAll = function() {
-          if (options.redirectOnSuccess) {
-            window.location = options.redirectOnSuccess;
+          if (options.onAfterAddingAll) {
+            options.onAfterAddingAll({
+              "addedFileItems":addedFileItems
+            });
+          }
+          else {
+            console.info('onAfterAddingAll', addedFileItems); 
           }
         };
+        uploader.onBeforeUploadItem = function(item) {
+          if (options.onBeforeUploadItem) {
+            options.onBeforeUploadItem({
+              "item":item
+            });
+          }
+          else {
+            console.info('onBeforeUploadItem', item); 
+          }
+        };
+        uploader.onProgressItem = function(fileItem, progress) {
+          if (options.onProgressItem) {
+            options.onProgressItem({
+              "fileItem":fileItem,
+              "progress":progress
+            });
+          }
+          else {
+            console.info('onProgressItem', fileItem, progress);
+          }
+        };
+        uploader.onProgressAll = function(progress) {
+          if (options.onProgressAll) {
+            options.onProgressAll({
+              "progress":progress
+            });
+          }
+          else {
+            console.info('onProgressAll', progress); 
+          }
+        };
+        uploader.onSuccessItem = function(fileItem, response, status, headers) {
+          if (options.onSuccessItem) {
+            options.onSuccessItem({
+              "fileItem":fileItem,
+              "response":response,
+              "status":status,
+              "headers":headers
+            });
+          }
+          else {
+            console.info('onSuccessItem', fileItem, response, status, headers); 
+          }
+        };
+        uploader.onErrorItem = function(fileItem, response, status, headers) {
+          if (options.onErrorItem) {
+            options.onErrorItem({
+              "fileItem":fileItem,
+              "response":response,
+              "status":status,
+              "headers":headers
+            });
+          }
+          else {
+            console.info('onErrorItem', fileItem, response, status, headers); 
+          }
+        }; 
+        uploader.onCancelItem = function(fileItem, response, status, headers) {
+          if (options.onCancelItem) {
+            options.onCancelItem({
+              "fileItem":fileItem,
+              "response":response,
+              "status":status,
+              "headers":headers
+            });
+          }
+          else {
+             console.info('onCancelItem', fileItem, response, status, headers); 
+          }
+        };
+        uploader.onCompleteItem = function(fileItem, response, status, headers) {
+          if (options.onCompleteItem) {
+            options.onCompleteItem({
+              "fileItem":fileItem,
+              "response":response,
+              "status":status,
+              "headers":headers
+            });
+          }
+          else {
+             console.info('onCompleteItem', fileItem, response, status, headers); 
+          }
+        };
+        uploader.onCompleteAll = function() {
+          if (options.onCompleteAll) {
+            uploader.onCompleteAll = options.onCompleteAll();
+          }
+          else {
+            if (options.redirectOnSuccess) {
+              window.location = options.redirectOnSuccess;
+            } 
+          }
+        }; 
       },
-      upload: function($scope, targetId) {
+      upload: function($scope, targetUrl) {
         if ($scope.uploader.queue.length < 1) {
           return false;
         }
-
-        $scope.uploader.formData[0].targetId          = targetId;
-        $scope.uploader.queue[0].formData[0].targetId = targetId;
-
+        
+        if (targetUrl) {
+          // set upload URL dynamically
+          $scope.uploader.queue[0].url = targetUrl;
+        }
+ 
         $scope.uploader.uploadAll();
 
         return true;

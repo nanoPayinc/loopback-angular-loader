@@ -1,9 +1,10 @@
 {
   "name": "loopback-angular-loader",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "homepage": "https://github.com/nanoPayinc/loopback-angular-loader",
   "authors": [
-    "Oleksii Strutsynskyi <cajoy1981@gmail.com>"
+    "Oleksii Strutsynskyi <alex@nanopay.net>",
+    "Joe Auty <joe.auty@nanopay.net>"
   ],
   "description": "Loopback-Angular helper",
   "main": [
