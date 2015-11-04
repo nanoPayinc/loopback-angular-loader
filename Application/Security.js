@@ -40,31 +40,34 @@ angular.module('shared')
           function() {
             self.clearUser();
             
-            if (typeof options.logoutRedirect !== "undefined" && options.loginRedirect === false) {
-              return;
+            if (typeof options.logoutRedirect !== "undefined" && options.logoutRedirect === false) {
+              callback(false, 'Logout successful');
+            }
+            else {
+              if (Environment.getConfig('cookieName')) {
+                $cookies.remove(Environment.getConfig('cookieName'));
+                // set cookie so that application can use to suppress error messages
+                // about being logged out due to expiration of session
+                $cookies.putObject(Environment.getConfig('cookieName') + '_triggerlogout', true);
+              }
+
+              window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
+
+              //callback(false, true);  
             }
             
-            if (Environment.getConfig('cookieName')) {
-              $cookies.remove(Environment.getConfig('cookieName'));
-              // set cookie so that application can use to suppress error messages
-              // about being logged out due to expiration of session
-              $cookies.putObject(Environment.getConfig('cookieName') + '_triggerlogout', true);
-            }
-
-            window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
-
-            callback(false, true);
           },
           function(res) {
             self.clearUser();
             
-            if (typeof options.logoutRedirect !== "undefined" && options.loginRedirect === false) {
-              return;
+            if (typeof options.logoutRedirect !== "undefined" && options.logoutRedirect === false) {
+              callback(res.data.error);
             }
+            else {
+              window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
 
-            window.location = options.logoutRedirect || Environment.getConfig('logoutRedirect');
-
-            callback(res.data.error);
+              //callback(res.data.error); 
+            }
           }
         );
       },
@@ -109,39 +112,42 @@ angular.module('shared')
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
-                if (Environment.getConfig('cookieName')) {
-                  // set cookie used to keep Loopback access token TTL with frontend in sync
-                  var expiration = Date.now() + (data.ttl * 1000);
-                  var expirationObj = null;
-                  if (userData.rememberme) {
-                    // allow cookie to be retained across browser sessions if "remember me" is checked
-                    expirationObj = { 
-                      expires:new Date(expiration) 
-                    }; 
-                  }
-                  
-                  $cookies.putObject(Environment.getConfig('cookieName'), {
-                    id:data.id,
-                    expiration:expiration
-                  }, expirationObj); 
-                }
-                
-                if (Environment.getConfig('loginRedirect') && 
-                typeof Environment.getConfig('loginRedirect') === "function" ) {
-                  options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
-                  // delete loginref so that it is only used once
-                  $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
-                }
-
-                currentUser = user;
-
-                callback(false, user);
-                
                 if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
-                  return;
+                  currentUser = user;
+                  callback(false, user);
                 }
+                else {
+                  if (Environment.getConfig('cookieName')) {
+                    // set cookie used to keep Loopback access token TTL with frontend in sync
+                    var expiration = Date.now() + (data.ttl * 1000);
+                    var expirationObj = null;
+                    if (userData.rememberme) {
+                      // allow cookie to be retained across browser sessions if "remember me" is checked
+                      expirationObj = { 
+                        expires:new Date(expiration) 
+                      }; 
+                    }
+                  
+                    $cookies.putObject(Environment.getConfig('cookieName'), {
+                      id:data.id,
+                      expiration:expiration
+                    }, expirationObj); 
+                  }
+                
+                  if (Environment.getConfig('loginRedirect') && 
+                  typeof Environment.getConfig('loginRedirect') === "function" ) {
+                    options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
+                    // delete loginref so that it is only used once
+                    $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
+                  }
 
-                window.location = options.loginRedirect || Environment.getConfig('loginRedirect');
+                  currentUser = user;
+
+                  //callback(false, user);
+
+                  window.location = options.loginRedirect || Environment.getConfig('loginRedirect');  
+                }
+                
               },
               function (res) {
                 callback(res);
