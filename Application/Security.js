@@ -112,34 +112,35 @@ angular.module('shared')
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
+                if (Environment.getConfig('cookieName')) {
+                  // set cookie used to keep Loopback access token TTL with frontend in sync
+                  var expiration = Date.now() + (data.ttl * 1000);
+                  var expirationObj = null;
+                  if (userData.rememberme) {
+                    // allow cookie to be retained across browser sessions if "remember me" is checked
+                    expirationObj = { 
+                      expires:new Date(expiration) 
+                    }; 
+                  }
+                
+                  $cookies.putObject(Environment.getConfig('cookieName'), {
+                    id:data.id,
+                    expiration:expiration
+                  }, expirationObj); 
+                }
+              
+                if (Environment.getConfig('loginRedirect') && 
+                typeof Environment.getConfig('loginRedirect') === "function" ) {
+                  options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
+                  // delete loginref so that it is only used once
+                  $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
+                }
+                
                 if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
                   currentUser = user;
                   callback(false, user);
                 }
                 else {
-                  if (Environment.getConfig('cookieName')) {
-                    // set cookie used to keep Loopback access token TTL with frontend in sync
-                    var expiration = Date.now() + (data.ttl * 1000);
-                    var expirationObj = null;
-                    if (userData.rememberme) {
-                      // allow cookie to be retained across browser sessions if "remember me" is checked
-                      expirationObj = { 
-                        expires:new Date(expiration) 
-                      }; 
-                    }
-                  
-                    $cookies.putObject(Environment.getConfig('cookieName'), {
-                      id:data.id,
-                      expiration:expiration
-                    }, expirationObj); 
-                  }
-                
-                  if (Environment.getConfig('loginRedirect') && 
-                  typeof Environment.getConfig('loginRedirect') === "function" ) {
-                    options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
-                    // delete loginref so that it is only used once
-                    $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
-                  }
 
                   currentUser = user;
 
