@@ -21,7 +21,10 @@ angular.module('shared')
           fn: function(item /*{File|FileLikeObject}*/) {
             var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
             return '|jpg|png|jpeg|bmp|gif|'.indexOf(type) !== -1;
-          },
+          }
+        });
+        
+        uploader.filters.push({
           name: 'CSVFilter',
           fn: function(item /*{File|FileLikeObject}*/) {
             var type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|';
