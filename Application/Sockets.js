@@ -5,46 +5,38 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope', '$interval',
-  function(ApplicationSecurity, Sockets, $rootScope, $interval) {
+  'ApplicationSockets', ['ApplicationSecurity', 'Sockets', '$rootScope',
+  function(ApplicationSecurity, Sockets, $rootScope) {
     var connection;
     var selectedRoom;
-    var isConnected              = false;
-    var updatedDate, currentDate = new Date();
+    var isConnected = false;
+    var updatedDate = new Date();
 
     var internal = function () {
       this.connection     = false;
       this.addedListeners = {};
     }
 
-    internal.prototype.connect = function (callback, reconnect) {
+    internal.prototype.connect = function (callback) {
       var self = this;
       var userId = ApplicationSecurity.userId();
 
-      if (! userId) {
-        callback(false);
+      if (!userId) {
+        if (callback) {
+          callback(false);
+        }
+        return;
       }
 
-      Sockets.connect({
-        'userId': userId
-      }, function (data) {
-        if (self.connection) {
-          self.connection.disconnect();
-          self.connection.connect();
-        } else {
-          self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId, {'reconnection': false});
-        }
+      self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId);
 
-        console.log('Connected to sockets: ', userId);
+      console.log('Connected to sockets: ', userId);
 
-        if (! reconnect) {
-          $rootScope.$emit("ApplicationSockets.connected", true);
-        }
+      if (!callback) {
+        return;
+      }
 
-        callback(true);
-      }, function () {
-        callback(false);
-      });
+      callback(true);
     }
 
     internal.prototype.directOn = function (eventName, callback) {
@@ -94,23 +86,7 @@ angular.module('shared')
       });
     });
 
-    $interval(function () {
-      currentDate = new Date();
-
-      if (! updatedDate) {
-        updatedDate = new Date();
-      }
-
-      if (currentDate - updatedDate > 4000) {
-        isConnected = false;
-
-        if (ApplicationSecurity.userId()) {
-          console.log('Reconnecting to sockets');
-
-          engine.connect(function (data) {}, true);
-        }
-      }
-    }, 2000);
+    engine.connect();
 
     return engine;
 }]);
