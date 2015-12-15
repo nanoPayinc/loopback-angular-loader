@@ -30,7 +30,19 @@ angular.module('shared')
 
       self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId);
 
-      console.log('Connected to sockets: ', userId);
+      self.connection.on('connect', function () {
+        isConnected = true;
+      });
+
+      self.connection.on('error', function (err) {
+        isConnected = false;
+
+        if (err != 'Invalid namespace') {
+          return;
+        }
+
+        window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
+      });
 
       if (!callback) {
         return;
