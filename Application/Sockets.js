@@ -34,7 +34,7 @@ angular.module('shared')
         } else {
           self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId, {'reconnection': false});
         }
-console.log('test');
+
         console.log('Connected to sockets: ', userId);
 
         if (! reconnect) {
