@@ -19,16 +19,16 @@ angular.module('shared')
 
     internal.prototype.connect = function (callback) {
       var self = this;
-      var userId = ApplicationSecurity.userId();
+      var user = ApplicationSecurity.user();
 
-      if (!userId) {
+      if (!user.id) {
         if (callback) {
           callback(false);
         }
         return;
       }
 
-      self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + userId);
+      self.connection = io.connect(Environment.getConfig('socketsUrl') + '/' + user.id);
 
       self.connection.on('connect', function () {
         isConnected = true;
@@ -41,7 +41,7 @@ angular.module('shared')
           return;
         }
 
-        window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
+        ApplicationSecurity.logout();
       });
 
       if (!callback) {
