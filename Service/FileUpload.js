@@ -31,6 +31,12 @@ angular.module('shared')
             return '|csv|'.indexOf(type) !== -1;
           }
         });
+        
+        if ($scope.customFilters) {
+          $scope.customFilters.forEach(function(filter) {
+            uploader.filters.push(filter)
+          })
+        }
 
         uploader.queueLimit = 1;
 
