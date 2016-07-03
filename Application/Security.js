@@ -104,17 +104,21 @@ angular.module('shared')
         }
 
         User.login(userData,
-          function(data) {
+          function(accessToken) {
+            if (accessToken.id) {
+              LoopBackAuth.setUser(accessToken.id, accessToken.userId, false); 
+            }
+
             User.findById(
               {
-                'id' : data.userId
+                'id' : accessToken.userId
               },
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
                 
                 if (Environment.getConfig('cookieName')) {
                   // set cookie used to keep Loopback access token TTL with frontend in sync
-                  var expiration = Date.now() + (data.ttl * 1000);
+                  var expiration = Date.now() + (accessToken.ttl * 1000);
                   var expirationObj = null;
                   if (userData.rememberme) {
                     // allow cookie to be retained across browser sessions if "remember me" is checked
@@ -124,7 +128,7 @@ angular.module('shared')
                   }
                 
                   $cookies.putObject(Environment.getConfig('cookieName'), {
-                    id:data.id,
+                    id:accessToken.id,
                     expiration:expiration
                   }, expirationObj); 
                 }
@@ -172,9 +176,16 @@ angular.module('shared')
       },
       preloadUser: function() {
         var self = this;
+        var noAuth;
+        
         // create array of URLs where no cookie/authentication is required to access
-        var noAuth = Environment.getConfig('noAuth');
-        noAuth.push(Environment.getConfig('logoutRedirect'));
+        if (Environment.getConfig('noAuth')) {
+          noAuth = Environment.getConfig('noAuth');
+          noAuth.push(Environment.getConfig('logoutRedirect')); 
+        }
+        else {
+          noAuth = [];
+        }
 
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) && 
@@ -209,6 +220,10 @@ angular.module('shared')
               }
             );
           } else {
+            if ($cookies.getObject(Environment.getConfig('cookieName'))) {
+              LoopBackAuth.setUser($cookies.getObject(Environment.getConfig('cookieName')).id, null, false); 
+            }
+            
             User.getFromSession(function (data) {
               if (data.accessToken && data.accessToken.id) {
                 User.findById(

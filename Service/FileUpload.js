@@ -42,7 +42,6 @@ angular.module('shared')
 
         // CALLBACKS
         uploader.onWhenAddingFileFailed = function(item /*{File|FileLikeObject}*/, filter, options) {
-          console.log(options);
           if (options.onWhenAddingFileFailed) {
             options.onWhenAddingFileFailed({
               "item":item,

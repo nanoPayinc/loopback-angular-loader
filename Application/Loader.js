@@ -21,7 +21,7 @@ angular.module('shared')
             options = {};
           }
 
-          options.sockets = true;
+          //options.sockets = true;
 
           currentState = state;
 
