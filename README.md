@@ -6,7 +6,7 @@ This library integrates Loopback access tokens, the surrounding security involvi
 REQUIREMENTS
 ============
 
-The API used by this library needs a `User` and `Sockets` model, and these models need to be exposed to your Angular application (which you can do using the Loopback Angular SDK, or the lb-ng command).
+The API used by this library needs a `User` model, and this model need to be exposed to your Angular application (which you can do using the Loopback Angular SDK, or the lb-ng command).
 
 Your user model requires the following public endpoints:
 

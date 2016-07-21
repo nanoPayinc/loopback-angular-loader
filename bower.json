@@ -1,6 +1,6 @@
 {
   "name": "loopback-angular-loader",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "homepage": "https://github.com/nanoPayinc/loopback-angular-loader",
   "authors": [
     "Oleksii Strutsynskyi <alex@nanopay.net>",
@@ -11,10 +11,8 @@
     "Module.js",
     "Application/Loader.js",
     "Application/Security.js",
-    "Application/Sockets.js",
     "Service/FileUpload.js",
-    "Service/NotificationManager.js",
-    "Vendors/socket.io-1.3.7.js"
+    "Service/NotificationManager.js"
   ],
   "dependencies": {
     "angularjs-toaster": "~0.4.10",
