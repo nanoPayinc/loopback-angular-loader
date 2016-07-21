@@ -7,8 +7,8 @@ angular.module('shared')
     LoopBackResourceProvider.setUrlBase(Environment.getConfig('apiUrl'));
   }])
   .factory('ApplicationLoader', [
-    'ApplicationSecurity', 'ApplicationSockets',
-    function(ApplicationSecurity, ApplicationSockets) {
+    'ApplicationSecurity',
+    function(ApplicationSecurity) {
       var currentState;
 
       return {
@@ -21,23 +21,9 @@ angular.module('shared')
             options = {};
           }
 
-          //options.sockets = true;
-
           currentState = state;
 
           var preloadUserPromise = ApplicationSecurity.preloadUser();
-
-          if (options && options.sockets) {
-            preloadUserPromise.then(function () {
-              ApplicationSockets.connect(function (isConnected) {
-                console.log('Connected to sockets on application load: ' + isConnected);
-              });
-            });
-
-            return preloadUserPromise;
-          } else {
-            return preloadUserPromise;
-          }
         },
         updateState: function(state) {
           currentState = state;
