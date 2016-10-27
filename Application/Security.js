@@ -127,8 +127,9 @@ angular.module('shared')
                 console.log(accessToken);
                 
                 accessToken.id = accessToken.accessToken;
+                LoopBackAuth.setUser(accessToken.id, null, false); 
                 
-                self.initLogin(accessToken, {}, callback, {
+                self.initLogin(accessToken, {}, {}, {
                   loginRedirect: accessToken.client.redirectUri
                 }, {});
               }, function(accessTokenError) {
@@ -163,7 +164,7 @@ angular.module('shared')
             expiration:expiration
           }, expirationObj); 
         }
-        
+       
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
           currentUser = user;
           callback(false, user);
@@ -179,7 +180,6 @@ angular.module('shared')
           currentUser = user;
 
           //callback(false, user);
-
           window.location = options.loginRedirect || Environment.getConfig('loginRedirect');  
         }
       },
