@@ -98,21 +98,18 @@ angular.module('shared')
           }
         );
       },
-      oAuth2Authorize: function(client_id, redirect_uri, response_type, scope, callback) {
+      oAuth2Authorize: function(client_id, redirect_uri, response_type, scope, user, callback) {
         var self = this;
         
         switch (response_type) {
         case "code":
-          // authorization code grant
-          
-          // establish user ID
-          
+          // authorization code grant 
           Oauth2.authorize({
             client_id:client_id, 
             redirect_uri:redirect_uri, 
             response_type:"code", 
             scope:scope, 
-            user_id:"57f7fad49dd5d09b4912d60b"
+            user_id:user.id
           }, function(authCode) {
             //console.log(authCode);
             if (authCode.authorizationCode) {
@@ -124,14 +121,16 @@ angular.module('shared')
                 grant_type:"authorization_code",
                 redirect_uri:authCode.redirectUri 
               }, function(accessToken) {
-                console.log(accessToken);
+                //console.log(accessToken);
                 
                 accessToken.id = accessToken.accessToken;
                 LoopBackAuth.setUser(accessToken.id, null, false); 
                 
+                // don't need userData (login options such as remember me)
+                // don't need callback (callback will always be URL redirect)
                 self.initLogin(accessToken, {}, {}, {
                   loginRedirect: accessToken.client.redirectUri
-                }, {});
+                }, user);
               }, function(accessTokenError) {
                 console.log(accessTokenError);
               }); 
