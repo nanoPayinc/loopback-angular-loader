@@ -85,7 +85,8 @@ angular.module('shared')
           function(user) {
             // attach additional user properties to LoopBackAuth user
             LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
-            LoopBackAuth.isAdmin = user.isAdmin;
+            //LoopBackAuth.isAdmin = user.isAdmin;
+            LoopBackAuth.save();
 
             currentUser = user;
 
@@ -125,10 +126,12 @@ angular.module('shared')
                 
                 accessToken.id = accessToken.accessToken;
                 LoopBackAuth.setUser(accessToken.id, null, false); 
+                LoopBackAuth.save();
                 
-                // don't need userData (login options such as remember me)
                 // don't need callback (callback will always be URL redirect)
-                self.initLogin(accessToken, {}, {}, {
+                self.initLogin(accessToken, {
+                  rememberme:true
+                }, {}, {
                   loginRedirect: accessToken.client.redirectUri
                 }, user);
               }, function(accessTokenError) {
@@ -145,22 +148,23 @@ angular.module('shared')
         }
       },
       initLogin: function(accessToken, userData, callback, options, user) {
-        LoopBackAuth.isAdmin = user.isAdmin;
+        //LoopBackAuth.isAdmin = user.isAdmin;
         
         if (Environment.getConfig('cookieName')) {
           // set cookie used to keep Loopback access token TTL with frontend in sync
-          var expiration = Date.now() + (accessToken.ttl * 1000);
+          var expiration = accessToken.accessTokenExpires;
           var expirationObj = null;
           if (userData.rememberme) {
             // allow cookie to be retained across browser sessions if "remember me" is checked
             expirationObj = { 
-              expires:new Date(expiration) 
+              expires:new Date(accessToken.accessTokenExpires)
             }; 
           }
         
           $cookies.putObject(Environment.getConfig('cookieName'), {
             id:accessToken.id,
-            expiration:expiration
+            expiration:expiration,
+            user:user
           }, expirationObj); 
         }
        
@@ -191,6 +195,7 @@ angular.module('shared')
           function(accessToken) {
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false); 
+              LoopBackAuth.save();
             }
 
             User.findById(
@@ -214,7 +219,7 @@ angular.module('shared')
         currentUser = false;
 
         LoopBackAuth.clearUser();
-        LoopBackAuth.isAdmin = false;
+        //LoopBackAuth.isAdmin = false;
         LoopBackAuth.rememberMe = true; // Cleaning local storage
         LoopBackAuth.save();
 
@@ -254,7 +259,7 @@ angular.module('shared')
                 'id': self.isAuthenticated()
               },
               function(user) {
-                LoopBackAuth.isAdmin = user.isAdmin;
+                //LoopBackAuth.isAdmin = user.isAdmin;
 
                 currentUser = user;
 
@@ -267,36 +272,28 @@ angular.module('shared')
               }
             );
           } else {
-            if ($cookies.getObject(Environment.getConfig('cookieName'))) {
-              LoopBackAuth.setUser($cookies.getObject(Environment.getConfig('cookieName')).id, null, false); 
-            }
+            var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
             
-            User.getFromSession(function (data) {
-              if (data.accessToken && data.accessToken.id) {
-                User.findById(
-                  {
-                    'id': data.accessToken.userId
-                  },
-                  function(user) {
-                    LoopBackAuth.isAdmin = user.isAdmin;
+            User.findById(
+              {
+                'id': accessToken.user.id
+              },
+              function(user) {
+                //LoopBackAuth.isAdmin = user.isAdmin;
 
-                    LoopBackAuth.setUser(data.accessToken.id, data.accessToken.userId, user);
-                    LoopBackAuth.save();
+                LoopBackAuth.setUser(accessToken.id, accessToken.user.id, user);
+                LoopBackAuth.save();
 
-                    $window.location.reload();
+                $window.location.reload();
 
-                    resolve(user);
-                  },
-                  function (res) {
-                    self.clearUser();
+                resolve(user);
+              },
+              function (res) {
+                self.clearUser();
 
-                    reject(res);
-                  }
-                );
-              } else {
-                reject('empty session data');
+                reject(res);
               }
-            });
+            );
           }
         });
       }
