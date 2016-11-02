@@ -102,36 +102,39 @@ angular.module('shared')
         if (! options) {
           options = {};
         }
+        
+        var loginMethod = options.loginMethod ? options.loginMethod : User.login;
+        var findUserMethod = options.findUserMethod ? options.findUserMethod : User.findById;
 
-        User.login(userData,
+        loginMethod(userData,
           function(accessToken) {
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false); 
+              
+              if (Environment.getConfig('cookieName')) {
+                // set cookie used to keep Loopback access token TTL with frontend in sync
+                var expiration = Date.now() + (accessToken.ttl * 1000);
+                var expirationObj = null;
+                if (userData.rememberme) {
+                  // allow cookie to be retained across browser sessions if "remember me" is checked
+                  expirationObj = { 
+                    expires:new Date(expiration) 
+                  }; 
+                }
+              
+                $cookies.putObject(Environment.getConfig('cookieName'), {
+                  id:accessToken.id,
+                  expiration:expiration
+                }, expirationObj); 
+              }
             }
 
-            User.findById(
+            findUserMethod(
               {
                 'id' : accessToken.userId
               },
               function(user) {
                 LoopBackAuth.isAdmin = user.isAdmin;
-                
-                if (Environment.getConfig('cookieName')) {
-                  // set cookie used to keep Loopback access token TTL with frontend in sync
-                  var expiration = Date.now() + (accessToken.ttl * 1000);
-                  var expirationObj = null;
-                  if (userData.rememberme) {
-                    // allow cookie to be retained across browser sessions if "remember me" is checked
-                    expirationObj = { 
-                      expires:new Date(expiration) 
-                    }; 
-                  }
-                
-                  $cookies.putObject(Environment.getConfig('cookieName'), {
-                    id:accessToken.id,
-                    expiration:expiration
-                  }, expirationObj); 
-                }
                 
                 if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
                   currentUser = user;
