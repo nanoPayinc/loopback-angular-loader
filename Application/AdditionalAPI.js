@@ -13,6 +13,9 @@ angular.module('shared')
       }).
       success(function(data, status, headers, config) {
         callback(data);
+      })
+      .error(function(data, status, headers, config) {
+        console.log("userAuth error", data);
       });
     },
     findUserById:function(where, callback) {
@@ -25,6 +28,24 @@ angular.module('shared')
       }).
       success(function(data, status, headers, config) {
         callback(data);
+      })
+      .error(function(data, status, headers, config) {
+        console.log("findUserById error", data);
+      });
+    },
+    logout:function(where, callback) {
+      $http({
+        method:'POST',
+        url:Environment.getConfig('mainApiUrl') + '/users/logout',
+        headers:{
+          'Authorization':$cookies.getObject(Environment.getConfig('cookieName')).id
+        }
+      }).
+      success(function(data, status, headers, config) {
+        callback(data);
+      })
+      .error(function(data, status, headers, config) {
+        console.log("logout error", data);
       });
     }
   };
