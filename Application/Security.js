@@ -5,8 +5,8 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'AdditionalAPI', 'User', '$q', '$window', '$cookies',
-  function($rootScope, LoopBackAuth, AdditionalAPI, User, $q, $window, $cookies) {
+  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'APISupport', '$q', '$window', '$cookies',
+  function($rootScope, LoopBackAuth, APISupport, $q, $window, $cookies) {
     var currentUser = {};
 
     var internal = {
@@ -35,10 +35,8 @@ angular.module('shared')
         }
 
         var self = this;
-        
-        var logoutMethod = Environment.getConfig('mainApiUrl') ? AdditionalAPI.logout : User.logout;
 
-        logoutMethod(false,
+        APISupport.logout(false,
           function() {
             self.clearUser();
             
@@ -80,7 +78,7 @@ angular.module('shared')
         LoopBackAuth.rememberMe = true;
         LoopBackAuth.save();
 
-        User.findById(
+        APISupport.findUserById(
           {
             'id' : accessToken.userId
           },
@@ -88,6 +86,8 @@ angular.module('shared')
             // attach additional user properties to LoopBackAuth user
             LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
             //LoopBackAuth.isAdmin = user.isAdmin;
+            
+            LoopBackAuth.save();
 
             currentUser = user;
 
@@ -100,18 +100,114 @@ angular.module('shared')
           }
         );
       },
+      oAuth2Authorize: function(client_id, redirect_uri, response_type, scope, user, callback) {
+        var self = this;
+        
+        switch (response_type) {
+        case "code":
+          // authorization code grant 
+          APISupport.oAuth2Authorize({
+            client_id:client_id, 
+            redirect_uri:redirect_uri, 
+            response_type:"code", 
+            scope:scope, 
+            user_id:user.id
+          }, function(authCode) {
+            //console.log(authCode);
+            if (authCode.authorizationCode) {
+              // exchange auth code for access token, API will auto-supply the client secret
+              APISupport.oAuth2Token({
+                code:authCode.authorizationCode,
+                client_id:client_id,
+                client_secret:null,
+                grant_type:"authorization_code",
+                redirect_uri:authCode.redirectUri 
+              }, function(accessToken) {
+                //console.log(accessToken);
+                
+                accessToken.id = accessToken.accessToken;
+                LoopBackAuth.setUser(accessToken.id, null, false); 
+                LoopBackAuth.save();
+                
+                // don't need callback (callback will always be URL redirect)
+                self.initLogin(accessToken, {
+                  rememberme:true
+                }, {}, {
+                  loginRedirect: accessToken.client.redirectUri
+                }, user);
+              }, function(accessTokenError) {
+                console.log(accessTokenError);
+              }); 
+            }
+            else {
+              console.log("Error authorizing application with oAuth2 server");
+            }
+          }, function(authCodeError) {
+            console.log(authCodeError);
+          });
+          break;
+        }
+      },
+      initLogin: function(accessToken, userData, callback, options, user) {
+        //LoopBackAuth.isAdmin = user.isAdmin;
+        
+        if (Environment.getConfig('cookieName')) {
+          // set cookie used to keep Loopback access token TTL with frontend in sync
+          var expiration = accessToken.accessTokenExpires;
+          var expirationObj = null;
+          if (userData.rememberme) {
+            // allow cookie to be retained across browser sessions if "remember me" is checked
+            expirationObj = { 
+              expires:new Date(accessToken.accessTokenExpires)
+            }; 
+          }
+        
+          $cookies.putObject(Environment.getConfig('cookieName'), {
+            id:accessToken.id,
+            expiration:expiration,
+            user:user,
+            userId:user.id
+          }, expirationObj); 
+        }
+       
+        if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
+          currentUser = user;
+          callback(false, user);
+        }
+        else {
+          if (Environment.getConfig('loginRedirect') && 
+          typeof Environment.getConfig('loginRedirect') === "function") {
+            options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
+            
+            // delete loginref so that it is only used once
+            $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
+          }
+
+          currentUser = user;
+
+          //callback(false, user);
+          var redirect = options.loginRedirect || Environment.getConfig('loginRedirect');
+          if (redirect == $window.location.pathname + $window.location.hash) {
+            // don't attempt to redirect to current page, reload it instead
+            $window.location.reload();
+          }
+          else {
+            window.location = redirect;   
+          }
+        }
+      },
       login: function(userData, callback, options) {
+        var self = this;
+        
         if (! options) {
           options = {};
         }
-        
-        var loginMethod = options.loginMethod ? options.loginMethod : User.login;
-        var findUserMethod = options.findUserMethod ? options.findUserMethod : User.findById;
 
-        loginMethod(userData,
+        APISupport.userAuth(userData,
           function(accessToken) {
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false); 
+              LoopBackAuth.save();
             }
             
             if (Environment.getConfig('cookieName')) {
@@ -131,39 +227,12 @@ angular.module('shared')
               }, expirationObj); 
             }
 
-            findUserMethod(
+            APISupport.findUserById(
               {
                 'id' : accessToken.userId
               },
               function(user) {
-                //LoopBackAuth.isAdmin = user.isAdmin;
-                
-                // attach user ID to cookie
-                $cookies.putObject(Environment.getConfig('cookieName'), {
-                  id:accessToken.id,
-                  expiration:expiration,
-                  userId:user.id
-                }, expirationObj); 
-                
-                if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
-                  currentUser = user;
-                  callback(false, user);
-                }
-                else {
-                  if (Environment.getConfig('loginRedirect') && 
-                  typeof Environment.getConfig('loginRedirect') === "function") {
-                    options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
-                    // delete loginref so that it is only used once
-                    $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
-                  }
-
-                  currentUser = user;
-
-                  //callback(false, user);
-
-                  window.location = options.loginRedirect || Environment.getConfig('loginRedirect');  
-                }
-                
+                self.initLogin(accessToken, userData, callback, options, user);
               },
               function (res) {
                 callback(res);
@@ -179,7 +248,7 @@ angular.module('shared')
         currentUser = false;
 
         LoopBackAuth.clearUser();
-        LoopBackAuth.isAdmin = false;
+        //LoopBackAuth.isAdmin = false;
         LoopBackAuth.rememberMe = true; // Cleaning local storage
         LoopBackAuth.save();
 
@@ -198,8 +267,6 @@ angular.module('shared')
         else {
           noAuth = [];
         }
-        
-        var findUserById = Environment.getConfig('mainApiUrl') ? AdditionalAPI.findUserById : User.findById;
 
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) && 
@@ -216,7 +283,7 @@ angular.module('shared')
               $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
           }
           else if (self.isAuthenticated()) {
-            findUserById(
+            APISupport.findUserById(
               {
                 'id': self.isAuthenticated()
               },
@@ -236,11 +303,12 @@ angular.module('shared')
           } else {
             if ($cookies.getObject(Environment.getConfig('cookieName'))) {
               var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
+              console.log("TOKEN", accessToken);
               LoopBackAuth.setUser(accessToken.id, null, false); 
               LoopBackAuth.save();
               
               if (accessToken && accessToken.id) {
-                findUserById(
+                APISupport.findUserById(
                   {
                     'id': accessToken.userId
                   },
@@ -263,7 +331,6 @@ angular.module('shared')
                 reject('empty session data');
               }
             }
-            
           }
         });
       }
