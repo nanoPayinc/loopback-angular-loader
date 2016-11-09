@@ -111,7 +111,7 @@ angular.module('shared')
             redirect_uri:redirect_uri, 
             response_type:"code", 
             scope:scope, 
-            user_id:user.id
+            user_id:user
           }, function(authCode) {
             //console.log(authCode);
             if (authCode.authorizationCode) {
@@ -303,7 +303,6 @@ angular.module('shared')
           } else {
             if ($cookies.getObject(Environment.getConfig('cookieName'))) {
               var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
-              console.log("TOKEN", accessToken);
               LoopBackAuth.setUser(accessToken.id, null, false); 
               LoopBackAuth.save();
               
