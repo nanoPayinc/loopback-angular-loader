@@ -169,19 +169,22 @@ angular.module('shared')
             userId:user.id
           }, expirationObj); 
         }
-       
+      
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
           currentUser = user;
           callback(false, user);
         }
         else {
-          if (Environment.getConfig('loginRedirect') && 
+          if (!options.loginRedirect && Environment.getConfig('loginRedirect') && 
           typeof Environment.getConfig('loginRedirect') === "function") {
-            options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
+            // options.loginRedirect = specific redirect based on context (e.g. oAuth2 client)
+            // cookie loginRedirect = generic application redirect landing pages
             
-            // delete loginref so that it is only used once
-            $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
+            options.loginRedirect = Environment.getConfig('loginRedirect')(user, $cookies.getObject(Environment.getConfig('cookieName') + '_loginref'));
           }
+          
+          // delete loginref so that it is only used once
+          $cookies.remove(Environment.getConfig('cookieName') + '_loginref');
 
           currentUser = user;
 
