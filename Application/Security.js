@@ -277,36 +277,35 @@ angular.module('shared')
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
               $window.location = Environment.getConfig('logoutRedirect');
           }
-          else {
-            if ($cookies.getObject(Environment.getConfig('cookieName'))) {
-              var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
-              LoopBackAuth.setUser(accessToken.id, null, false); 
-              LoopBackAuth.save();
-              
-              if (accessToken && accessToken.id) {
-                APISupport.findUserById(
-                  {
-                    'id': accessToken.userId
-                  },
-                  function(user) {
-                    //LoopBackAuth.isAdmin = user.isAdmin;
-                    LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
-                    currentUser = user;
-
-                    //$window.location.reload();
-
-                    resolve(user);
-                  },
-                  function (res) {
-                    console.log("ERROR", res);
+          else if ($cookies.getObject(Environment.getConfig('cookieName'))) {
+            var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
+            LoopBackAuth.setUser(accessToken.id, null, false); 
+            LoopBackAuth.save();
+            
+            if (accessToken && accessToken.id) {
+              APISupport.findUserById(
+                {
+                  'id': accessToken.userId
+                },
+                function(user) {
+                  if (user && user.error) {
                     self.clearUser();
 
-                    reject(res);
+                    $cookies.remove(Environment.getConfig('cookieName'));
+                    window.location = Environment.getConfig('logoutRedirect');
+                    reject(user);
                   }
-                );
-              } else {
-                reject('empty session data');
-              }
+                  //LoopBackAuth.isAdmin = user.isAdmin;
+                  LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
+                  currentUser = user;
+
+                  //$window.location.reload();
+
+                  resolve(user);
+                }
+              );
+            } else {
+              reject('empty session data');
             }
           }
         });
