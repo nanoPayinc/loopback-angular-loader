@@ -5,16 +5,13 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'APISupport', '$q', '$window', '$cookies',
-  function($rootScope, LoopBackAuth, APISupport, $q, $window, $cookies) {
+  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'APISupport', 'NotificationManager', '$q', '$window', '$cookies',
+  function($rootScope, LoopBackAuth, APISupport, NotificationManager, $q, $window, $cookies) {
     var currentUser = {};
 
     var internal = {
       user: function() {
         return currentUser;
-      },
-      isAuthenticated: function () {
-        return LoopBackAuth.currentUserId; /// !!! refactor to use boolean value
       },
       userId: function () {
         return LoopBackAuth.currentUserId;
@@ -260,50 +257,27 @@ angular.module('shared')
       },
       preloadUser: function() {
         var self = this;
-        var noAuth;
         
         // create array of URLs where no cookie/authentication is required to access
-        if (Environment.getConfig('noAuth')) {
-          noAuth = Environment.getConfig('noAuth');
-          noAuth.push(Environment.getConfig('logoutRedirect')); 
-        }
-        else {
-          noAuth = [];
-        }
+        var noAuth = Environment.getConfig('noAuth') || [];
+        noAuth.push(Environment.getConfig('logoutRedirect')); 
 
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) && 
-            noAuth.indexOf($window.location.pathname) < 0) {
-            // missing cookie, on unauthorized page
+            noAuth.indexOf($window.location.pathname) < 0 && 
+            noAuth.indexOf($window.location.hash) < 0) {
+            // missing cookie, on unauthorized page, redirect to logout page
             $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
-            $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
+            $window.location = Environment.getConfig('logoutRedirect');
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) && 
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() && 
             noAuth.indexOf($window.location.pathname) < 0) {
             // expired cookie within current browsing session, redirect to logout page
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $window.location.pathname + $window.location.hash);
-              $window.location = Environment.getConfig('logoutRedirect') + '#/redirect/loginRequired';
+              $window.location = Environment.getConfig('logoutRedirect');
           }
-          else if (self.isAuthenticated()) {
-            APISupport.findUserById(
-              {
-                'id': self.isAuthenticated()
-              },
-              function(user) {
-                //LoopBackAuth.isAdmin = user.isAdmin;
-
-                currentUser = user;
-
-                resolve(user);
-              },
-              function (res) {
-                self.clearUser();
-
-                reject(res);
-              }
-            );
-          } else {
+          else {
             if ($cookies.getObject(Environment.getConfig('cookieName'))) {
               var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
               LoopBackAuth.setUser(accessToken.id, null, false); 
@@ -324,6 +298,7 @@ angular.module('shared')
                     resolve(user);
                   },
                   function (res) {
+                    console.log("ERROR", res);
                     self.clearUser();
 
                     reject(res);
