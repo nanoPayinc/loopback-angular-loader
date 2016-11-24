@@ -5,7 +5,7 @@
 angular.module('shared')  
 .factory('APISupport', ['$rootScope', '$http', '$cookies', function($rootScope, $http, $cookies) {
   // use alternate API URL (mainApiUrl) if provided, otherwise use primary API URL (apiUrl)
-  var apiUrl = Environment.getConfig('mainApiUrl') ? Environment.getConfig('mainApiUrl') : Environment.getConfig('apiUrl');
+  var apiUrl = Environment.getConfig('mainApiUrl') || Environment.getConfig('apiUrl');
   
   var internal = {
     userAuth:function(data, callback) {
@@ -13,8 +13,8 @@ angular.module('shared')
         method:'POST',
         url:apiUrl + '/users/login',
         data:data
-      }).
-      success(function(data, status, headers, config) {
+      })
+      .success(function(data, status, headers, config) {
         callback(data);
       })
       .error(function(data, status, headers, config) {
@@ -28,8 +28,8 @@ angular.module('shared')
         headers:{
           'Authorization':$cookies.getObject(Environment.getConfig('cookieName')).id
         }
-      }).
-      success(function(data, status, headers, config) {
+      })
+      .success(function(data, status, headers, config) {
         callback(data);
       })
       .error(function(data, status, headers, config) {
@@ -43,8 +43,8 @@ angular.module('shared')
         headers:{
           'Authorization':$cookies.getObject(Environment.getConfig('cookieName')).id
         }
-      }).
-      success(function(data, status, headers, config) {
+      })
+      .success(function(data, status, headers, config) {
         callback(data);
       })
       .error(function(data, status, headers, config) {
@@ -56,8 +56,8 @@ angular.module('shared')
         method:'GET',
         url:apiUrl + '/oauth2/authorize',
         params:params
-      }).
-      success(function(data, status, headers, config) {
+      })
+      .success(function(data, status, headers, config) {
         callback(data);
       })
       .error(function(data, status, headers, config) {
@@ -69,8 +69,8 @@ angular.module('shared')
         method:'POST',
         url:apiUrl + '/oauth2/token',
         data:data
-      }).
-      success(function(data, status, headers, config) {
+      })
+      .success(function(data, status, headers, config) {
         callback(data);
       })
       .error(function(data, status, headers, config) {
