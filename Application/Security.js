@@ -100,6 +100,10 @@ angular.module('shared')
       oAuth2Authorize: function(client_id, redirect_uri, response_type, scope, user, callback) {
         var self = this;
         
+        if (!response_type) {
+          return;
+        }
+        
         switch (response_type) {
         case "code":
           // authorization code grant 
@@ -142,6 +146,19 @@ angular.module('shared')
           }, function(authCodeError) {
             console.log(authCodeError);
           });
+          break;
+          
+          
+        case 'refresh_token':
+          
+          break;
+          
+        case 'client_credentials':
+          
+          break;
+          
+        case 'password':
+          
           break;
         }
       },
