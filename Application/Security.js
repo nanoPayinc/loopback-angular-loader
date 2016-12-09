@@ -224,6 +224,7 @@ angular.module('shared')
                 //LoopBackAuth.isAdmin = user.isAdmin;
 
                 currentUser = user;
+                $rootScope.$broadcast('userDataAvailable', user);
 
                 resolve(user);
               },
