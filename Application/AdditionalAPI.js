@@ -2,11 +2,11 @@
 
 'use strict';
 
-angular.module('shared')  
-.factory('APISupport', ['$rootScope', '$http', '$cookies', '$q', function($rootScope, $http, $cookies, $q) {
+angular.module('shared')
+.factory('AdditionalAPI', ['$rootScope', '$http', '$cookies', '$q', function($rootScope, $http, $cookies, $q) {
   // use alternate API URL (mainApiUrl) if provided, otherwise use primary API URL (apiUrl)
   var apiUrl = Environment.getConfig('mainApiUrl') || Environment.getConfig('apiUrl');
-  
+
   var internal = {
     userAuth:function(data) {
       return $q(function(resolve, reject) {
@@ -26,8 +26,8 @@ angular.module('shared')
     },
     findUserById:function(where) {
       return $q(function(resolve, reject) {
-        if (typeof where !== "undefined" && typeof where.id !== "undefined" && 
-        typeof $cookies.getObject(Environment.getConfig('cookieName')) !== "undefined" && 
+        if (typeof where !== "undefined" && typeof where.id !== "undefined" &&
+        typeof $cookies.getObject(Environment.getConfig('cookieName')) !== "undefined" &&
         typeof $cookies.getObject(Environment.getConfig('cookieName')).id !== "undefined") {
           $http({
             method:'GET',
@@ -41,7 +41,7 @@ angular.module('shared')
           })
           .catch(function(response) {
             reject(data);
-          }); 
+          });
         }
         else {
           reject(null);
@@ -99,7 +99,7 @@ angular.module('shared')
       });
     }
   };
-  
+
   $rootScope.AdditionalAPI = internal;
   return internal;
 

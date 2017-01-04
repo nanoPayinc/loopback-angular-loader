@@ -11,7 +11,7 @@
     "Module.js",
     "Application/Loader.js",
     "Application/Security.js",
-    "Application/APISupport.js",
+    "Application/AdditionalAPI.js",
     "Service/NotificationManager.js"
   ],
   "dependencies": {

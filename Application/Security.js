@@ -5,8 +5,8 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'APISupport', 'NotificationManager', '$q', '$window', '$cookies',
-  function($rootScope, LoopBackAuth, APISupport, NotificationManager, $q, $window, $cookies) {
+  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'AdditionalAPI', 'NotificationManager', '$q', '$window', '$cookies',
+  function($rootScope, LoopBackAuth, AdditionalAPI, NotificationManager, $q, $window, $cookies) {
     var currentUser = {};
 
     var internal = {
