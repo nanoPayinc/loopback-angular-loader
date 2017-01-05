@@ -150,18 +150,18 @@ angular.module('shared')
 
         if (Environment.getConfig('cookieName')) {
           // set cookie used to keep Loopback access token TTL with frontend in sync
-          var expiration = accessToken.accessTokenExpires;
+          var expiration = $cookies.getObject(Environment.getConfig('cookieName')).expiration
           var expirationObj = null;
           if (userData.rememberme) {
             // allow cookie to be retained across browser sessions if "remember me" is checked
             expirationObj = {
-              expires:new Date(accessToken.accessTokenExpires)
+              expires:new Date(expiration)
             };
           }
 
           $cookies.putObject(Environment.getConfig('cookieName'), {
-            id:accessToken.id,
-            expiration:expiration,
+            id: accessToken,
+            expiration: expiration,
             user:user,
             userId:user.id
           }, expirationObj);
