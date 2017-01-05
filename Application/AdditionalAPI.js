@@ -3,7 +3,7 @@
 'use strict';
 
 angular.module('shared')
-.factory('AdditionalAPI', ['$rootScope', '$http', '$cookies', '$q', function($rootScope, $http, $cookies, $q) {
+.factory('AdditionalAPI', ['$rootScope', '$http', '$cookies', '$q', '$location', function($rootScope, $http, $cookies, $q, $location) {
   // use alternate API URL (mainApiUrl) if provided, otherwise use primary API URL (apiUrl)
   var apiUrl = Environment.getConfig('mainApiUrl') || Environment.getConfig('apiUrl');
 
@@ -12,7 +12,7 @@ angular.module('shared')
       return $q(function(resolve, reject) {
         $http({
           method:'POST',
-          url:apiUrl + '/users/login',
+          url: apiUrl + '/users/login',
           data:data
         })
         .then(function(data, status, headers, config) {
@@ -33,14 +33,14 @@ angular.module('shared')
             method:'GET',
             url:apiUrl + '/users/' + where.id,
             headers:{
-              'Authorization':$cookies.getObject(Environment.getConfig('cookieName')).id
+              'accessToken': $cookies.getObject(Environment.getConfig('cookieName')).id
             }
           })
           .then(function(data) {
             resolve(data);
           })
           .catch(function(response) {
-            reject(data);
+            reject(response);
           });
         }
         else {

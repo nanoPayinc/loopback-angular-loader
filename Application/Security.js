@@ -5,8 +5,8 @@
 angular.module('shared')
 
 .factory(
-  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'AdditionalAPI', 'NotificationManager', '$q', '$window', '$cookies',
-  function($rootScope, LoopBackAuth, AdditionalAPI, NotificationManager, $q, $window, $cookies) {
+  'ApplicationSecurity', ['$rootScope', 'LoopBackAuth', 'AdditionalAPI', 'NotificationManager', '$q', '$window', '$cookies', '$location',
+  function($rootScope, LoopBackAuth, AdditionalAPI, NotificationManager, $q, $window, $cookies, $location) {
     var currentUser = {};
 
     var internal = {
@@ -36,7 +36,7 @@ angular.module('shared')
 
         var self = this;
 
-        APISupport.logout(false)
+        AdditionalAPI.logout(false)
         .then(function() {
           self.clearUser();
 
@@ -76,7 +76,7 @@ angular.module('shared')
         LoopBackAuth.rememberMe = true;
         LoopBackAuth.save();
 
-        APISupport.findUserById({
+        AdditionalAPI.findUserById({
           'id' : accessToken.userId
         })
         .then(function(user) {
@@ -102,7 +102,7 @@ angular.module('shared')
         switch (response_type) {
         case "code":
           // authorization code grant
-          APISupport.oAuth2Authorize({
+          AdditionalAPI.oAuth2Authorize({
             client_id:client_id,
             redirect_uri:redirect_uri,
             response_type:"code",
@@ -113,7 +113,7 @@ angular.module('shared')
             //console.log(authCode);
             if (authCode.authorizationCode) {
               // exchange auth code for access token, API will auto-supply the client secret
-              return APISupport.oAuth2Token({
+              return AdditionalAPI.oAuth2Token({
                 code:authCode.authorizationCode,
                 client_id:client_id,
                 client_secret:null,
@@ -211,8 +211,10 @@ angular.module('shared')
         }
 
         return $q(function(resolve, reject) {
-          APISupport.userAuth(userData)
+          AdditionalAPI.userAuth(userData)
           .then(function(accessToken) {
+            accessToken = accessToken.data;
+
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false);
               LoopBackAuth.save();
@@ -233,20 +235,17 @@ angular.module('shared')
               }
 
               $cookies.putObject(Environment.getConfig('cookieName'), {
-                id:accessToken.id,
+                id: accessToken.id,
                 expiration:expiration
               }, expirationObj);
             }
 
-            resolve(accessToken);
-          })
-          .then(function(accessToken) {
-            return APISupport.findUserById({
+            return AdditionalAPI.findUserById({
               'id': accessToken.userId
             });
           })
           .then(function(user) {
-            self.initLogin(accessToken, userData, callback, options, user);
+            self.initLogin(LoopBackAuth.accessTokenId, userData, callback, options, user);
           })
           .catch(function(err) {
             console.log(err);
@@ -293,7 +292,7 @@ angular.module('shared')
             LoopBackAuth.save();
 
             if (accessToken && accessToken.id) {
-              APISupport.findUserById({
+              AdditionalAPI.findUserById({
                 'id': accessToken.userId
               })
               .then(function(user) {

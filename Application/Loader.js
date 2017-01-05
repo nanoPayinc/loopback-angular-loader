@@ -7,7 +7,7 @@ angular.module('shared')
     LoopBackResourceProvider.setUrlBase(Environment.getConfig('apiUrl'));
   }])
   .factory('ApplicationLoader', [
-    'ApplicationSecurity', AdditionalAPI'',
+    'ApplicationSecurity', 'AdditionalAPI',
     function(ApplicationSecurity, AdditionalAPI) {
       var currentState;
 
