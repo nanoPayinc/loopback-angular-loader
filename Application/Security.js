@@ -80,6 +80,7 @@ angular.module('shared')
           'id' : accessToken.userId
         })
         .then(function(user) {
+          debugger;
           // attach additional user properties to LoopBackAuth user
           LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
           //LoopBackAuth.isAdmin = user.isAdmin;
@@ -147,7 +148,7 @@ angular.module('shared')
       },
       initLogin: function(accessToken, userData, callback, options, user) {
         //LoopBackAuth.isAdmin = user.isAdmin;
-
+        user = user.data;
         if (Environment.getConfig('cookieName')) {
           // set cookie used to keep Loopback access token TTL with frontend in sync
           var expiration = $cookies.getObject(Environment.getConfig('cookieName')).expiration
@@ -162,13 +163,13 @@ angular.module('shared')
           $cookies.putObject(Environment.getConfig('cookieName'), {
             id: accessToken,
             expiration: expiration,
-            user:user,
+            user: user.data,
             userId:user.id
           }, expirationObj);
         }
 
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
-          currentUser = user;
+          currentUser = user
           callback(false, user);
         }
         else {
@@ -189,8 +190,7 @@ angular.module('shared')
           $cookies.remove('response_type');
           $cookies.remove('scope');
           $cookies.remove('user');
-
-          currentUser = user;
+          currentUser = user.data;
 
           //callback(false, user);
           var redirect = options.loginRedirect || Environment.getConfig('loginRedirect');
@@ -296,6 +296,7 @@ angular.module('shared')
                 'id': accessToken.userId
               })
               .then(function(user) {
+                user = user.data;
                 if (user && user.error) {
                   self.clearUser();
 

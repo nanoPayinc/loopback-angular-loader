@@ -33,7 +33,7 @@ angular.module('shared')
             method:'GET',
             url:apiUrl + '/users/' + where.id,
             headers:{
-              'accessToken': $cookies.getObject(Environment.getConfig('cookieName')).id
+              'access_token': $cookies.getObject(Environment.getConfig('cookieName')).id
             }
           })
           .then(function(data) {
@@ -54,7 +54,7 @@ angular.module('shared')
           method:'POST',
           url:apiUrl + '/users/logout',
           headers:{
-            'Authorization':$cookies.getObject(Environment.getConfig('cookieName')).id
+            'accessToken': $cookies.getObject(Environment.getConfig('cookieName')).id
           }
         })
         .then(function(data, status, headers, config) {
