@@ -273,8 +273,8 @@ angular.module('shared')
 
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) &&
-            noAuth.indexOf($location.path()) < 0 &&
-            noAuth.indexOf($location.hash()) < 0) {
+            noAuth.indexOf($location.path()) < -1 &&
+            noAuth.indexOf($location.hash()) < -1) {
             // missing cookie, on unauthorized page, redirect to logout page
             $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
             $location.path(Environment.getConfig('logoutRedirect'));
