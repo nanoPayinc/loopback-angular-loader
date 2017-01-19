@@ -80,7 +80,6 @@ angular.module('shared')
           'id' : accessToken.userId
         })
         .then(function(user) {
-          debugger;
           // attach additional user properties to LoopBackAuth user
           LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
           //LoopBackAuth.isAdmin = user.isAdmin;
@@ -266,15 +265,14 @@ angular.module('shared')
       },
       preloadUser: function() {
         var self = this;
-
         // create array of URLs where no cookie/authentication is required to access
         var noAuth = Environment.getConfig('noAuth') || [];
         noAuth.push(Environment.getConfig('logoutRedirect'));
 
         return $q(function(resolve, reject) {
           if (!$cookies.getObject(Environment.getConfig('cookieName')) &&
-            noAuth.indexOf($location.path()) < -1 &&
-            noAuth.indexOf($location.hash()) < -1) {
+            noAuth.indexOf($location.path()) < 0 &&
+            noAuth.indexOf($location.hash()) < 0) {
             // missing cookie, on unauthorized page, redirect to logout page
             $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
             $location.path(Environment.getConfig('logoutRedirect'));
@@ -287,6 +285,7 @@ angular.module('shared')
               $location.path(Environment.getConfig('logoutRedirect'));
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName'))) {
+
             var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
             LoopBackAuth.setUser(accessToken.id, null, false);
             LoopBackAuth.save();
