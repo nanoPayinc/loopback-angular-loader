@@ -159,12 +159,25 @@ angular.module('shared')
             };
           }
 
-          $cookies.putObject(Environment.getConfig('cookieName'), {
-            id: accessToken,
-            expiration: expiration,
-            user: user.data,
-            userId:user.id
-          }, expirationObj);
+          if(user.twoFactorEnabled){
+            $cookies.putObject(Environment.getConfig('cookieName'), {
+              id: accessToken,
+              expiration: expiration,
+              user: user.data,
+              userId:user.id,
+              twoFactor: user.twoFactorEnabled,
+              twoAuthOK: false
+            }, expirationObj);
+          } else {
+            $cookies.putObject(Environment.getConfig('cookieName'), {
+              id: accessToken,
+              expiration: expiration,
+              user: user.data,
+              userId:user.id,
+              twoFactor: false,
+              twoAuthOK: true
+            }, expirationObj);
+          }
         }
 
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
@@ -213,7 +226,7 @@ angular.module('shared')
           AdditionalAPI.userAuth(userData)
           .then(function(accessToken) {
             accessToken = accessToken.data;
-
+            console.log(accessToken)
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false);
               LoopBackAuth.save();
@@ -252,6 +265,23 @@ angular.module('shared')
           })
         });
       },
+      twoAuthSuccess: function() {
+        var accessToken = $cookies.getObject(Environment.getConfig('cookieName'))
+        // set cookie used to keep Loopback access token TTL with frontend in sync
+        var expiration = accessToken.expiration
+        var expirationObj = new Date(expiration);
+
+        $cookies.putObject(Environment.getConfig('cookieName'), {
+          id: accessToken.id,
+          expiration: expiration,
+          user: accessToken.user,
+          userId: accessToken.userId,
+          twoFactor: accessToken.twoFactor,
+          twoAuthOK: true
+        }, expirationObj);
+
+        accessToken = $cookies.getObject(Environment.getConfig('cookieName'))
+      },
       clearUser: function() {
         currentUser = false;
 
@@ -279,9 +309,10 @@ angular.module('shared')
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) &&
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() &&
-            noAuth.indexOf($location.path()) < 0) {
+            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName')) &&
+            !$cookies.getObject(Environment.getConfig('cookieName')).twoAuthOK && $cookies.getObject(Environment.getConfig('cookieName')).twoFactor) {
             // expired cookie within current browsing session, redirect to logout page
-              $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path()+ $location.hash());
+              $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
               $location.path(Environment.getConfig('logoutRedirect'));
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName'))) {
@@ -306,7 +337,6 @@ angular.module('shared')
                 //LoopBackAuth.isAdmin = user.isAdmin;
                 LoopBackAuth.setUser(accessToken.id, accessToken.userId, user);
                 currentUser = user;
-
                 //$window.location.reload();
 
                 resolve(user);
