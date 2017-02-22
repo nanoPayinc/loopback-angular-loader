@@ -159,25 +159,12 @@ angular.module('shared')
             };
           }
 
-          if(user.twoFactorEnabled){
-            $cookies.putObject(Environment.getConfig('cookieName'), {
-              id: accessToken,
-              expiration: expiration,
-              user: user.data,
-              userId:user.id,
-              twoFactor: user.twoFactorEnabled,
-              twoAuthOK: false
-            }, expirationObj);
-          } else {
-            $cookies.putObject(Environment.getConfig('cookieName'), {
-              id: accessToken,
-              expiration: expiration,
-              user: user.data,
-              userId:user.id,
-              twoFactor: false,
-              twoAuthOK: true
-            }, expirationObj);
-          }
+          $cookies.putObject(Environment.getConfig('cookieName'), {
+            id: accessToken,
+            expiration: expiration,
+            user: user.data,
+            userId:user.id,
+          }, expirationObj);
         }
 
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
@@ -226,7 +213,7 @@ angular.module('shared')
           AdditionalAPI.userAuth(userData)
           .then(function(accessToken) {
             accessToken = accessToken.data;
-            console.log(accessToken)
+
             if (accessToken.id) {
               LoopBackAuth.setUser(accessToken.id, accessToken.userId, false);
               LoopBackAuth.save();
@@ -264,23 +251,6 @@ angular.module('shared')
             callback(err);
           })
         });
-      },
-      twoAuthSuccess: function() {
-        var accessToken = $cookies.getObject(Environment.getConfig('cookieName'))
-        // set cookie used to keep Loopback access token TTL with frontend in sync
-        var expiration = accessToken.expiration
-        var expirationObj = new Date(expiration);
-
-        $cookies.putObject(Environment.getConfig('cookieName'), {
-          id: accessToken.id,
-          expiration: expiration,
-          user: accessToken.user,
-          userId: accessToken.userId,
-          twoFactor: accessToken.twoFactor,
-          twoAuthOK: true
-        }, expirationObj);
-
-        accessToken = $cookies.getObject(Environment.getConfig('cookieName'))
       },
       clearUser: function() {
         currentUser = false;
