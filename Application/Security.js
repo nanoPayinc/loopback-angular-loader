@@ -159,12 +159,23 @@ angular.module('shared')
             };
           }
 
-          $cookies.putObject(Environment.getConfig('cookieName'), {
-            id: accessToken,
-            expiration: expiration,
-            user: user.data,
-            userId:user.id,
-          }, expirationObj);
+          if(user.twoFactorEnabled){
+            $cookies.putObject(Environment.getConfig('cookieName'), {
+              id: accessToken,
+              expiration: expiration,
+              user: user.data,
+              userId:user.id,
+              twoFactor: user.twoFactorEnabled,
+              twoAuthOK: true,
+            }, expirationObj);
+          } else {
+            $cookies.putObject(Environment.getConfig('cookieName'), {
+              id: accessToken,
+              expiration: expiration,
+              user: user.data,
+              userId:user.id
+            }, expirationObj);
+          }
         }
 
         if (typeof options.loginRedirect !== "undefined" && options.loginRedirect === false) {
@@ -279,7 +290,8 @@ angular.module('shared')
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) &&
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() &&
-            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName'))) {
+            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName')) &&
+            !$cookies.getObject(Environment.getConfig('cookieName')).twoAuthOK && $cookies.getObject(Environment.getConfig('cookieName')).twoFactor) {
             // expired cookie within current browsing session, redirect to logout page
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
               $location.path(Environment.getConfig('logoutRedirect'));
