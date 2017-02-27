@@ -279,8 +279,7 @@ angular.module('shared')
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) &&
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() &&
-            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName')) &&
-            !$cookies.getObject(Environment.getConfig('cookieName')).twoAuthOK && $cookies.getObject(Environment.getConfig('cookieName')).twoFactor) {
+            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName'))) {
             // expired cookie within current browsing session, redirect to logout page
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
               $location.path(Environment.getConfig('logoutRedirect'));
