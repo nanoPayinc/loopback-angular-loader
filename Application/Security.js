@@ -44,6 +44,7 @@ angular.module('shared')
             callback(false, 'Logout successful');
           }
           else {
+
             if (Environment.getConfig('cookieName')) {
               $cookies.remove(Environment.getConfig('cookieName'));
               // set cookie so that application can use to suppress error messages
@@ -58,7 +59,7 @@ angular.module('shared')
         })
         .catch(function(res) {
           self.clearUser();
-
+          $cookies.remove(Environment.getConfig('cookieName'));
           if (typeof options.logoutRedirect !== "undefined" && options.logoutRedirect === false) {
             callback(res.data.error);
           }
@@ -126,7 +127,6 @@ angular.module('shared')
             }
           })
           .then(function(accessToken) {
-            console.log(accessToken);
 
             accessToken.id = accessToken.accessToken;
             LoopBackAuth.setUser(accessToken.id, null, false);
@@ -258,7 +258,6 @@ angular.module('shared')
             self.initLogin(LoopBackAuth.accessTokenId, userData, callback, options, user);
           })
           .catch(function(err) {
-            console.log(err);
             callback(err);
           })
         });
@@ -290,14 +289,12 @@ angular.module('shared')
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName')) &&
             new Date($cookies.getObject(Environment.getConfig('cookieName')).expiration) < Date.now() &&
-            noAuth.indexOf($location.path()) < 0 || $cookies.getObject(Environment.getConfig('cookieName')) &&
-            !$cookies.getObject(Environment.getConfig('cookieName')).twoAuthOK && $cookies.getObject(Environment.getConfig('cookieName')).twoFactor) {
+            noAuth.indexOf($location.path()) < 0) {
             // expired cookie within current browsing session, redirect to logout page
               $cookies.putObject(Environment.getConfig('cookieName') + '_loginref', $location.path() + $location.hash());
               $location.path(Environment.getConfig('logoutRedirect'));
           }
           else if ($cookies.getObject(Environment.getConfig('cookieName'))) {
-
             var accessToken = $cookies.getObject(Environment.getConfig('cookieName'));
             LoopBackAuth.setUser(accessToken.id, null, false);
             LoopBackAuth.save();
